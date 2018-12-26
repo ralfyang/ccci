@@ -3,10 +3,10 @@
 
 ### How to use
 ```
-./1.quickstart.sh
+./quickstart.sh
 
 ==========================================================
- 0] Generation: Keys, docker-compose-yml for host
+ 0] Generation: Keys, Host configuration by ".env"
  1] Up the Concourse stack
  2] Run the Concourse stack by Daemon
  3] Down the Concourse stack

@@ -18,7 +18,7 @@ services:
       - CONCOURSE_POSTGRES_USER=concourse_user
       - CONCOURSE_POSTGRES_PASSWORD=concourse_pass
       - CONCOURSE_POSTGRES_DATABASE=concourse
-      - CONCOURSE_EXTERNAL_URL=http://HOST_IP:8080
+      - CONCOURSE_EXTERNAL_URL=http://${HOST_IP}:8080
       - CONCOURSE_ADD_LOCAL_USER=mz:$$2a$$10$$0W9/ilCpYXY/yCPpaOD.6eCrGda/fnH3D4lhsw1Mze0WTID5BuiTW
       - CONCOURSE_MAIN_TEAM_ALLOW_ALL_USERS=true
     ports: ["8080:8080"]
@@ -33,6 +33,7 @@ services:
       - CONCOURSE_TSA_HOST=concourse-web:2222
       - CONCOURSE_GARDEN_NETWORK
     command: worker
+    restart: always
   concourse-console:
 #    build: ./
     image: goody80/ccci:latest
@@ -40,7 +41,7 @@ services:
       - CONCOURSE_TARGET_NAME=mz_test
       - CONCOURSE_USER=mz
       - CONCOURSE_PASSWORD=test
-      - CONCOURSE_SERVER="http://http://HOST_IP:8080"
+      - CONCOURSE_SERVER="http://${HOST_IP}:8080"
     depends_on:
       - concourse-web
       - concourse-worker

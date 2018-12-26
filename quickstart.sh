@@ -4,7 +4,7 @@ show_menu(){
  	clear
  	BAR="=========================================================="
  	echo "$BAR"
- 	echo " 0] Generation: Keys, docker-compose-yml for host"
+ 	echo " 0] Generation: Keys, Host configuration by \".env\""
  	echo " 1] Up the Concourse stack"
  	echo " 2] Run the Concourse stack by Daemon"
  	echo " 3] Down the Concourse stack"
@@ -50,13 +50,10 @@ keygen_for_worker(){
 conf_gen(){
 Host_ip=$1
 	## Create a new docker-compose.yml for the Stack install
-	if [ -f docker-compose.yml.sample ];then
-		cat docker-compose.yml.sample | sed -e "s/HOST_IP/$Host_ip/g" > ./docker-compose.yml
-		echo " docker-compose.yml file has been created as below!"
-		cat docker-compose.yml
-	else
-		echo " docker-compose.yml.sample is not existed here! Please check again."
-		exit 1
+	if [ ! -f .env ];then
+		echo "HOST_IP=$Host_ip" > .env
+		echo " docker-compose config file has been created as below!"
+		cat .env
 	fi
 }
 
@@ -69,24 +66,24 @@ provisioning_docker(){
 
 	## Host IP address check for the external URL of the Service
 	if [ ! -f /tmp/host_ip ];then
+		Host_check=$(ip route | grep $(ip route | grep default | sed -e 's#[A-Za-z0-9].*dev ##g' | awk '{print $1}') | grep -v -e 'default' | sed -e 's#[0-9*.*].*src ##g' -e 's# ##g')
 		echo "$BAR"
-		echo " Please insert an IP address of the Host:"
+		# echo " Please insert an IP address of the Host:"
+		echo " Default Host IP address is [$Host_check]. Do you need to use by Default? [y]" 
 		echo "$BAR"
-		read Host_ip
-			if [[ $Host_ip = "" ]];then
-				echo "HOST IP address is empty!!. Please check again the IP address of the host."
-				exit 1
+		read anw_check
+			if [[ $anw_check =~ ^([yY][eE][sS]|[yY]) ]];then
+				conf_gen $Host_check
 			else
-				echo "$Host_ip" > /tmp/host_ip
-				conf_gen $Host_ip
-			fi
-	else
-		Host_ip=$(cat /tmp/host_ip)
-			if [[ $Host_ip = "" ]];then
-				echo "HOST IP address is empty!!. Please check again the IP address of the host."
-				exit 1
-			else
-				conf_gen $Host_ip
+				echo " Please insert an IP address of the Host:"
+				read Host_ipadd
+					if [[ $Host_ipadd = "" ]];then
+						echo "HOST IP address is empty!!. Please check again the IP address of the host."
+						exit 1
+					else
+		 				conf_gen $Host_ipadd
+						echo "$Host_ipadd" > /tmp/host_ip
+					fi
 			fi
 	fi
 }
@@ -99,7 +96,9 @@ checkout(){
 }
 
 clear_setup(){
-	rm -f /tmp/host_ip ./docker-compose.yml
+	rm -f /tmp/host_ip .env
+	echo "Configuration set has been removed!!"
+
 }
 
 

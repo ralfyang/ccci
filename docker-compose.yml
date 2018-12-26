@@ -38,8 +38,8 @@ services:
 #    build: ./
     image: goody80/ccci:latest
     environment:
-      - CONCOURSE_TARGET_NAME=mz_test
-      - CONCOURSE_USER=mz
+      - CONCOURSE_TARGET_NAME=tutorial
+      - CONCOURSE_USER=test
       - CONCOURSE_PASSWORD=test
       - CONCOURSE_SERVER="http://${HOST_IP}:8080"
     depends_on:

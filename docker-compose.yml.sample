@@ -34,8 +34,8 @@ services:
       - CONCOURSE_GARDEN_NETWORK
     command: worker
   concourse-console:
-    build: ./
-    image: ccci
+#    build: ./
+    image: goody80/ccci:latest
     environment:
       - CONCOURSE_TARGET_NAME=mz_test
       - CONCOURSE_USER=mz

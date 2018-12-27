@@ -7,7 +7,7 @@
 
 ### How to install
 ```
-curl -sL http://bit.ly/ccci_ |bash
+curl -sL http://bit.ly/ccci_ |bash && cd ccci
  ! You just type like this command -> ./quickstart.sh in the 'ccci' directory
 ```
 

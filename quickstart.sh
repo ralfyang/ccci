@@ -57,7 +57,7 @@ Server_type=$1
 			echo "You need to add a public-key(./keys/worker/worker_key.pub) to master(web)'s authorized_worker_keys(./keys/web/authorized_worker_keys) as below"
 			echo "$BAR"
 			echo "echo \"$(cat ./keys/worker/worker_key.pub)\" >> ./keys/web/authorized_worker_keys"
-			echo "$BAR""
+			echo "$BAR"
 			;;
 	esac
 }

@@ -41,11 +41,22 @@ Server_type=$1
 		 	ssh-keygen  -t rsa -f ./keys/web/tsa_host_key -N ''
 		 	ssh-keygen  -t rsa -f ./keys/web/session_signing_key -N ''
 			## have to be send a Public key to consul for connection each other by command
+			echo "$BAR"
+			echo "You need to add a public-key(./keys/web/tsa_host_key.pub) to worker's key directory as below"
+			echo "$BAR"
+			cat ./keys/web/tsa_host_key.pub
+			echo "$BAR"
+			echo " to ./keys/worker of worker's host"
 			;;
 		worker)
 		 	mkdir -p keys/worker
  		 	ssh-keygen  -t rsa -f ./keys/worker/worker_key -N ''
 			## have to be send a Public key to consul for connection each other by command
+			echo "$BAR"
+			echo "You need to add a public-key(./keys/worker/worker_key.pub) to master(web)'s authorized_worker_keys(./keys/web/authorized_worker_keys) as below"
+			echo "$BAR"
+			cat ./keys/worker/worker_key.pub
+			echo "$BAR"
 			;;
 	esac
 }

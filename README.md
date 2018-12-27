@@ -1,4 +1,4 @@
-# Concourse stack with interface console
+# Concourse stack install automation with interface console
 
 ## Prepare
 ### Requirement

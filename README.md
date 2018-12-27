@@ -1,5 +1,10 @@
 # Concourse stack with interface console
 
+## Prepare
+### Requirement
+ * Docker
+ * docker-compose
+
 ### How to install
 ```
 curl -sL http://bit.ly/ccci_ |bash

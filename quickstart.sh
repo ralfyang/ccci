@@ -1,4 +1,7 @@
 #!/bin/bash
+## ccci is a tool for Concourse Centralized management Console Interface(via API)
+## Made by Ralf Yang - https://github.com/goody80
+## Version 0.4
 
 show_menu(){
  	clear
@@ -18,33 +21,33 @@ show_menu
 read Menu
 
 keygen_for_worker(){
+Server_type=$1
  	set -e -u 
- 	
- 	# check if we should use the old PEM style for generating the keys
- 	# --------
- 	# check: https://www.openssh.com/txt/release-7.8
- 	
- 	PEM_OPTION=
- 	
- 	if [ "$#" -eq 1 ] && [ "$1" == '--use-pem' ]; then
- 	    PEM_OPTION='-m PEM'
- 	elif [ "$#" -eq 1 ]; then
- 	    echo "Invalid argument '$1', did you mean '--use-pem'?"
- 	    exit 1
- 	fi
- 	
  	# generate the keys
  	# --------
- 	
- 	mkdir -p keys/web keys/worker
- 	
- 	yes | ssh-keygen $PEM_OPTION -t rsa -f ./keys/web/tsa_host_key -N ''
- 	yes | ssh-keygen $PEM_OPTION -t rsa -f ./keys/web/session_signing_key -N ''
- 	
- 	yes | ssh-keygen $PEM_OPTION -t rsa -f ./keys/worker/worker_key -N ''
- 	
- 	cp ./keys/worker/worker_key.pub ./keys/web/authorized_worker_keys
- 	cp ./keys/web/tsa_host_key.pub ./keys/worker
+
+ 	## for total set
+	case $Server_type in
+		total)
+		 	mkdir -p keys/web keys/worker
+		 	ssh-keygen  -t rsa -f ./keys/web/tsa_host_key -N ''
+		 	ssh-keygen  -t rsa -f ./keys/web/session_signing_key -N ''
+ 		 	ssh-keygen  -t rsa -f ./keys/worker/worker_key -N ''
+ 		 	cp ./keys/worker/worker_key.pub ./keys/web/authorized_worker_keys
+		 	cp ./keys/web/tsa_host_key.pub ./keys/worker
+			;;
+		master)
+		 	mkdir -p keys/web
+		 	ssh-keygen  -t rsa -f ./keys/web/tsa_host_key -N ''
+		 	ssh-keygen  -t rsa -f ./keys/web/session_signing_key -N ''
+			## have to be send a Public key to consul for connection each other by command
+			;;
+		worker)
+		 	mkdir -p keys/worker
+ 		 	ssh-keygen  -t rsa -f ./keys/worker/worker_key -N ''
+			## have to be send a Public key to consul for connection each other by command
+			;;
+	esac
 }
 
 conf_gen(){
@@ -57,11 +60,29 @@ Host_ip=$1
 	fi
 }
 
+select_server_type(){
+	echo "$BAR"
+	echo "1. Concourse web + worker + console"
+	echo "2. Concourse web + console"
+	echo "3. Concourse worker"
+	echo "$BAR"
+	echo "Please select server type as below: [1-3]"
+	read S_type
+		case $S_type in
+			1) Server_type="total"
+			   cp -f docker-compose-total.yml docker-compose.yml ;;
+			2) Server_type="master"
+			   cp -f docker-compose-server.yml docker-compose.yml ;;
+			3) Server_type="worker"
+			   cp -f docker-compose-worker.yml docker-compose.yml ;;
+		esac
+}
 
 provisioning_docker(){
 	## Create a new keys for worker & web communication
-	if [ ! -f ./keys/web/tsa_host_key.pub ];then
-		keygen_for_worker
+	if [ ! -d ./keys ];then
+		select_server_type
+		keygen_for_worker $Server_type
 	fi
 
 	## Host IP address check for the external URL of the Service
@@ -69,7 +90,7 @@ provisioning_docker(){
 		Host_check=$(ip route | grep $(ip route | grep default | sed -e 's#[A-Za-z0-9].*dev ##g' | awk '{print $1}') | grep -v -e 'default' | sed -e 's#[0-9*.*].*src ##g' -e 's# ##g')
 		echo "$BAR"
 		# echo " Please insert an IP address of the Host:"
-		echo " Default Host IP address is [$Host_check]. Do you need to use by Default? [y]" 
+		echo " Default Host IP address is [$Host_check]. Is that Concourse server IP address? [y]" 
 		echo "$BAR"
 		read anw_check
 			if [[ $anw_check =~ ^([yY][eE][sS]|[yY]) ]];then
@@ -96,12 +117,10 @@ checkout(){
 }
 
 clear_setup(){
-	rm -f /tmp/host_ip .env
+	rm -Rfv /tmp/host_ip .env docker-compose.yml ./keys
 	echo "Configuration set has been removed!!"
 
 }
-
-
 	case $Menu in 
 		0) provisioning_docker ;;
 		1) checkout
@@ -109,6 +128,6 @@ clear_setup(){
 		2) checkout
 		   docker-compose up -d ;;
 		3) docker-compose down ;;
-		RM) clear_setup ;;
+		RM) docker-compose down && clear_setup ;;
 		*) show_menu ;;
 	esac

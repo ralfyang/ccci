@@ -1,0 +1,12 @@
+version: '2'
+services:
+  concourse-worker:
+    privileged: true
+    image: concourse/concourse
+    volumes: ["./keys/worker:/concourse-keys"]
+    environment:
+      - CONCOURSE_TSA_HOST=${HOST_IP}:2222
+      - CONCOURSE_GARDEN_NETWORK
+      - CONCOURSE_LOG_LEVEL=fatal
+    command: worker
+    restart: always

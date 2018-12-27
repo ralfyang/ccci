@@ -1,0 +1,37 @@
+version: '2'
+services:
+  concourse-db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=concourse
+      - POSTGRES_PASSWORD=concourse_pass
+      - POSTGRES_USER=concourse_user
+      - PGDATA=/database
+    volumes: ["./DB:/database"]
+  concourse-web:
+    image: concourse/concourse
+    links:
+      - concourse-db
+    volumes: ["./keys/web:/concourse-keys"]
+    environment:
+      - CONCOURSE_POSTGRES_HOST=concourse-db
+      - CONCOURSE_POSTGRES_USER=concourse_user
+      - CONCOURSE_POSTGRES_PASSWORD=concourse_pass
+      - CONCOURSE_POSTGRES_DATABASE=concourse
+      - CONCOURSE_EXTERNAL_URL=http://${HOST_IP}:8080
+      - CONCOURSE_ADD_LOCAL_USER=test:$$2a$$10$$0W9/ilCpYXY/yCPpaOD.6eCrGda/fnH3D4lhsw1Mze0WTID5BuiTW
+      - CONCOURSE_MAIN_TEAM_ALLOW_ALL_USERS=true
+      - CONCOURSE_LOG_LEVEL=fatal
+    command: web
+    ports: ["8080:8080"]
+    restart: always
+  concourse-console:
+#    build: ./
+    image: goody80/ccci:latest
+    environment:
+      - CONCOURSE_TARGET_NAME=tutorial
+      - CONCOURSE_USER=test
+      - CONCOURSE_PASSWORD=test
+      - CONCOURSE_SERVER="http://${HOST_IP}:8080"
+    links:
+      - concourse-web

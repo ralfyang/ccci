@@ -110,7 +110,7 @@ provisioning_docker(){
 			else
 				echo "$BAR"
 				echo "Local IP list is like this below"
-				ip addr |grep "inet " |fgrep -v "127.0.0.1" | awk '{print $2}' | sed -e 's#/[0-9*]##g'
+				ip addr |grep "inet " |fgrep -v "127.0.0.1" | awk '{print $2}' | sed -e 's#/[0-9].*##g'
 				echo "$BAR"
 				echo " Please type or copy & paste an IP address of the Host:"
 				read Host_ipadd

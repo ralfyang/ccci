@@ -46,7 +46,8 @@ Server_type=$1
 			echo "$BAR"
 			cat ./keys/web/tsa_host_key.pub
 			echo "$BAR"
-			echo " to ./keys/worker of worker's host"
+			echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
+			echo " cat > ./keys/worker/tsa_host_key.pub"
 			;;
 		worker)
 		 	mkdir -p keys/worker
@@ -55,8 +56,8 @@ Server_type=$1
 			echo "$BAR"
 			echo "You need to add a public-key(./keys/worker/worker_key.pub) to master(web)'s authorized_worker_keys(./keys/web/authorized_worker_keys) as below"
 			echo "$BAR"
-			cat ./keys/worker/worker_key.pub
-			echo "$BAR"
+			echo "echo \"$(cat ./keys/worker/worker_key.pub)\" >> ./keys/web/authorized_worker_keys"
+			echo "$BAR""
 			;;
 	esac
 }

@@ -108,17 +108,23 @@ provisioning_docker(){
 			if [[ $anw_check =~ ^([yY][eE][sS]|[yY]) ]];then
 				conf_gen $Host_check
 			else
-				echo " Please insert an IP address of the Host:"
+				echo "$BAR"
+				echo "Local IP list is like this below"
+				ip addr |grep "inet " |fgrep -v "127.0.0.1" | awk '{print $2}' | sed -e 's#/[0-9*]##g'
+				echo "$BAR"
+				echo " Please type or copy & paste an IP address of the Host:"
 				read Host_ipadd
 					if [[ $Host_ipadd = "" ]];then
 						echo "HOST IP address is empty!!. Please check again the IP address of the host."
 						exit 1
 					else
 		 				conf_gen $Host_ipadd
-						echo "$Host_ipadd" > /tmp/host_ip
 					fi
+				echo "$BAR"
+				docker-compose config
 			fi
 	fi
+
 }
 
 

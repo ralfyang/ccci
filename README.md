@@ -1,5 +1,10 @@
 # Concourse stack with interface console
 
+### How to install
+```
+curl -sL http://bit.ly/ccci_ |bash
+ ! You just type like this command -> ./quickstart.sh in the 'ccci' directory
+```
 
 ### How to use
 ```

@@ -161,7 +161,6 @@ consul_url=$consul_url
 		 	ssh-keygen  -t rsa -f ./keys/web/session_signing_key -N ''
 			## have to be send a Public key to consul for connection each other by command
 			echo "$BAR"
-			echo " Web : http://$Host_ip_num:$Host_port"
 			if [[ $consul_url == "" ]]; then
 				echo "You need to add a public-key(./keys/web/tsa_host_key.pub) to worker's key directory as below"
 				echo "$BAR"
@@ -169,6 +168,7 @@ consul_url=$consul_url
 				echo "$BAR"
 				echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
 				echo " cat > ./keys/worker/tsa_host_key.pub"
+				echo " Web : http://$Host_ip_num:$Host_port"
 				echo -e "$BAR2"
 			else
 				pubkey_tsa=$(cat ./keys/web/tsa_host_key.pub)
@@ -189,6 +189,7 @@ consul_url=$consul_url
 					done
 					echo "worker pubkey get"
 				fi
+				echo " Web : http://$Host_ip_num:$Host_port"
 				echo -e "$BAR2"
 			fi
 			;;
@@ -278,7 +279,7 @@ checkout(){
 }
 
 clear_setup(){
-	rm -Rfv /tmp/host_ip .env docker-compose.yml ./keys .consul_*
+	rm -Rfv /tmp/host_ip .env docker-compose.yml ./keys .consul_* svrty.log
 	# curl key delete!!!! 
 	echo "Configuration set has been removed!!"
 

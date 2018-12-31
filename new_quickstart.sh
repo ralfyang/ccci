@@ -169,9 +169,12 @@ consul_url=$consul_url
 					echo " cat > ./keys/worker/tsa_host_key.pub"
 					consul_puttsa_null=$(curl -sL -X DELETE ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
 				fi
-				for i in $(curl -sL ${consul_url}/v1/kv/concourse/hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}');do
-					echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
-				done
+				consul_getwork=$(curl -sL ${consul_url}/v1/kv/concourse/hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}')
+				if [[ $consul_getwork != "" ]];then
+					for i in $consul_getwork;do
+						echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
+					done
+				fi
 			fi
 			;;
 		worker)

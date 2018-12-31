@@ -225,7 +225,7 @@ Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep 
 				fi
 				consul_getweb=$(curl -X GET ${consul_url_dir}hosts_pubkey/tsa?raw)
 				echo "$consul_getweb" > ./keys/worker/tsa_host_key.pub
-					if [[ $consul_getweb != "true" ]]; then
+					if [[ $consul_getweb == "" ]]; then
 						rm -rf ./keys/worker/tsa_host_key.pub
 						echo "tsa key error" # >> log.log
 					fi
@@ -238,23 +238,23 @@ Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep 
 
 select_server_type(){
 	echo -e "$BAR2"
-	echo "1. Concourse web + worker + console"
-	echo "2. Concourse web + console"
-	echo "3. Concourse worker"
+	echo "1. Concourse web + console"
+	echo "2. Concourse worker"
+	echo "3. Concourse web + worker + console"
 	echo -e "$BAR2"
 	echo -n "Please select server type as below: [1-3] "
 	read -n 1 S_type
 	echo
 		case $S_type in
-			1) Server_type="total"
-			   echo "$Server_type" > svrty.log
-			   cp -f docker-compose-total.yml docker-compose.yml ;;
-			2) Server_type="master"
+			1) Server_type="master"
 			   echo "$Server_type" > svrty.log
 			   cp -f docker-compose-server.yml docker-compose.yml ;;
-			3) Server_type="worker"
+			2) Server_type="worker"
 			   echo "$Server_type" > svrty.log
 			   cp -f docker-compose-worker.yml docker-compose.yml ;;
+			3) Server_type="total"
+			   echo "$Server_type" > svrty.log
+			   cp -f docker-compose-total.yml docker-compose.yml ;;
 		esac
 }
 

@@ -10,34 +10,37 @@ Host_port=8080
 # Consul check #
 chk_consul_url(){
 	clear
-	if [ ! -f .consul_url ];then
-		echo -e "$BAR2"
-		echo -n -e " Are you using \"Consul\" (\033[1;32m"yes"\033[0m/\033[1;33m"no"\033[0m)? : "
-		read consul_check
-		consul_check=$(echo "$consul_check" |sed -e 's/\(.*\)/\L\1/')
-		echo -e "$BAR2"
-			if [[ $consul_check = "y" ]] || [[ $consul_check = "yes" ]]  ;then
-				echo " ex: http(s)://consul.example.com "
-				echo -n " Your \"Consul\" URL : "
-				read consul_url
-#	### http status code check
-#				http_code=$(curl -o /dev/null --silent --head --write-out "%{http_code}" "$consul_url")
-#				http_redirect=$(curl -o /dev/null --silent --head --write-out "%{redirect_url}" "$consul_url")
-#				# SAMPLE #curl -o /dev/null --silent --head --write-out "$consul_url %{http_code} %{redirect_url}\n" "$consul_url"
-#				echo "Your site : $consul_url, HTTP status : $http_code, Redirect URL : $http_redirect"
+	if [ ! -f .consul_not ];then
+		if [ ! -f .consul_url ];then
+			echo -e "$BAR2"
+			echo -n -e " Are you using \"Consul\" (\033[1;32m"yes"\033[0m/\033[1;33m"no"\033[0m)? : "
+			read consul_check
+			consul_check=$(echo "$consul_check" |sed -e 's/\(.*\)/\L\1/')
+			echo -e "$BAR2"
+				if [[ $consul_check = "y" ]] || [[ $consul_check = "yes" ]]  ;then
+					echo " ex: http(s)://consul.example.com "
+					echo -n " Your \"Consul\" URL : "
+					read consul_url
+	#	### http status code check
+	#				http_code=$(curl -o /dev/null --silent --head --write-out "%{http_code}" "$consul_url")
+	#				http_redirect=$(curl -o /dev/null --silent --head --write-out "%{redirect_url}" "$consul_url")
+	#				# SAMPLE #curl -o /dev/null --silent --head --write-out "$consul_url %{http_code} %{redirect_url}\n" "$consul_url"
+	#				echo "Your site : $consul_url, HTTP status : $http_code, Redirect URL : $http_redirect"
 
-				if [[ $consul_url =~ ^(https?:\/\/)([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w_\.-]*)*\/?$ ]]; then
-				#	echo " > URL ChEcK GoOd <" # >> ./log.log
-					echo "$consul_url" > .consul_url
-				else
-					clear
-					echo -e " Your \"Consul\" URL($consul_url) \033[31m"checking!"\033[0m "
-				echo " ex: http(s)://consul.example.com "
-				exit 1	
+					if [[ $consul_url =~ ^(https?:\/\/)([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w_\.-]*)*\/?$ ]]; then
+					#	echo " > URL ChEcK GoOd <" # >> ./log.log
+						echo "$consul_url" > .consul_url
+					else
+						clear
+						echo -e " Your \"Consul\" URL($consul_url) \033[31m"checking!"\033[0m "
+					echo " ex: http(s)://consul.example.com "
+					exit 1	
+				fi
+			else
+				echo " >> Not used consul" # >> ./log.log
+				echo "not" > .consul_not
 			fi
-                else
-			echo "Not used consul" # >> ./log.log
-                fi
+		fi
 	fi
 }
 
@@ -107,6 +110,10 @@ show_menu(){
 	fi
 	if [ -f .consul_url ];then
 		echo " >> Using Consul : $consul_url"
+	else
+		if [ -f .consul_not ];then
+			echo " >> Do not use Consul "
+		fi
 	fi
 	if [ -f .env ];then
 		echo " >> Setting Web(Master) IP : $Host_ip_num"
@@ -154,6 +161,7 @@ consul_url=$consul_url
 		 	ssh-keygen  -t rsa -f ./keys/web/session_signing_key -N ''
 			## have to be send a Public key to consul for connection each other by command
 			echo "$BAR"
+			echo " Web : http://$Host_ip_num:$Host_port"
 			if [[ $consul_url == "" ]]; then
 				echo "You need to add a public-key(./keys/web/tsa_host_key.pub) to worker's key directory as below"
 				echo "$BAR"
@@ -161,6 +169,7 @@ consul_url=$consul_url
 				echo "$BAR"
 				echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
 				echo " cat > ./keys/worker/tsa_host_key.pub"
+				echo -e "$BAR2"
 			else
 				pubkey_tsa=$(cat ./keys/web/tsa_host_key.pub)
 				consul_puttsa=$(curl -sL -X PUT -d "$pubkey_tsa" ${consul_url_dir}hosts_pubkey/tsa)
@@ -169,13 +178,18 @@ consul_url=$consul_url
 					echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
 					echo " cat > ./keys/worker/tsa_host_key.pub"
 					consul_puttsa_null=$(curl -sL -X DELETE ${consul_url_dir}hosts_pubkey/tsa)
+					echo -e "$BAR2"
+				else
+					echo " tsa pubkey put" 
 				fi
 				consul_getwork=$(curl -sL ${consul_url_dir}hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}')
 				if [[ $consul_getwork != "" ]];then
 					for i in $consul_getwork;do
 						echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
 					done
+					echo "worker pubkey get"
 				fi
+				echo -e "$BAR2"
 			fi
 			;;
 		worker)
@@ -230,10 +244,13 @@ select_server_type(){
 	echo
 		case $S_type in
 			1) Server_type="total"
+			   echo "$Server_type" > svrty.log
 			   cp -f docker-compose-total.yml docker-compose.yml ;;
 			2) Server_type="master"
+			   echo "$Server_type" > svrty.log
 			   cp -f docker-compose-server.yml docker-compose.yml ;;
 			3) Server_type="worker"
+			   echo "$Server_type" > svrty.log
 			   cp -f docker-compose-worker.yml docker-compose.yml ;;
 		esac
 }
@@ -247,6 +264,7 @@ provisioning_docker(){
 	else
 		echo -e " \033[1;33m>> Existing configuration exists\033[0m "
 		echo -e " \033[1;33m>> Please delete existing setting and execute.\033[0m "
+		echo -e " \033[1;33m>> Server type is \033[1;31m$(cat svrty.log)\033[0m.\033[0m"
 	fi
 
 }
@@ -254,12 +272,13 @@ provisioning_docker(){
 
 checkout(){
 	if [ ! -f docker-compose.yml ];then
+		echo " >> Generation First << "
 		provisioning_docker
 	fi
 }
 
 clear_setup(){
-	rm -Rfv /tmp/host_ip .env docker-compose.yml ./keys .consul_url
+	rm -Rfv /tmp/host_ip .env docker-compose.yml ./keys .consul_*
 	# curl key delete!!!! 
 	echo "Configuration set has been removed!!"
 
@@ -273,6 +292,7 @@ clear_setup(){
 		3) docker-compose down ;;
 		RM) docker-compose down
 		    clear_setup ;;
-		*) show_menu ;;
+		*) echo -e "\033[1;31m Select Menu\033[0m" ;;
+#		*) show_menu ;;
 	esac
 		

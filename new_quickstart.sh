@@ -5,6 +5,8 @@
 BAR="=========================================================="
 BAR2="\033[31m==========================================================\033[0m"
 
+Host_port=8080
+
 # Consul check #
 chk_consul_url(){
 	clear
@@ -171,6 +173,14 @@ consul_url=$consul_url
 			fi
 			;;
 		worker)
+			Master_checker=$(curl -si http://$Host_ip_num:$Host_port | head -1 | grep "OK")
+			while true; do
+				if [[ $Master_checker != ""  ]];then
+					break
+				fi
+				sleep 5
+				echo "- Checking for the concourse web(http://$Host_ip_num:$Host_port) server alives. Please wait..."
+			done
 		 	mkdir -p keys/worker
  		 	ssh-keygen  -t rsa -f ./keys/worker/worker_key -N ''
 			## have to be send a Public key to consul for connection each other by command

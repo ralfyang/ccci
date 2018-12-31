@@ -27,7 +27,7 @@ chk_consul_url(){
 #				echo "Your site : $consul_url, HTTP status : $http_code, Redirect URL : $http_redirect"
 
 				if [[ $consul_url =~ ^(https?:\/\/)([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w_\.-]*)*\/?$ ]]; then
-					echo " > URL ChEcK GoOd <" # >> ./log.log
+				#	echo " > URL ChEcK GoOd <" # >> ./log.log
 					echo "$consul_url" > .consul_url
 				else
 					clear
@@ -59,7 +59,7 @@ chk_host_ip(){
 		Host_check=$(ip route | grep $(ip route | grep default | sed -e 's#[A-Za-z0-9].*dev ##g' | awk '{print $1}') | grep -v -e 'default' | sed -e 's#[0-9*.*].*src ##g' -e 's# ##g')
 		echo "$BAR"
 		# echo " Please insert an IP address of the Host:"
-		echo -e -n " Default Host IP address is \033[1;32m$Host_check\033[0m. Is that Concourse server IP address? [y] : " 
+		echo -e -n " Default Host IP address is \033[1;32m$Host_check\033[0m. Is that Concourse Web(Master) server IP address? [y] : " 
 #		echo "$BAR"
 		read anw_check
 		echo "$BAR"
@@ -69,12 +69,12 @@ chk_host_ip(){
 				echo "Local IP list is like this below"
 				ip addr |grep "inet " |fgrep -v "127.0.0.1" | awk '{print $2}' | sed -e 's#/[0-9].*##g'
 				echo "$BAR"
-				echo -n " Please type or copy & paste an IP address of the Host : "
+				echo -n " Please type or copy & paste an IP address of the Web(Master) : "
 				read Host_ipadd
 					if [[ $Host_ipadd =~ ^((0|1[0-9]{0,2}|2[0-9]?|2[0-4][0-9]|25[0-5]|[3-9][0-9]?)\.){3}(0|1[0-9]{0,2}|2[0-9]?|2[0-4][0-9]|25[0-5]|[3-9][0-9]?)$ ]];then
 		 				conf_gen $Host_ipadd
 					else
-						echo -e "\033[1;33m>> HOST IP address is empty or bad address!!. Please check again the IP address of the host.\033[0m"
+						echo -e "\033[1;33m>> Web(Master) IP address is empty or bad address!!. Please check again the IP address of the Web(Master).\033[0m"
 						echo -e "\033[1;33m>> Your insert IP address : ${Host_ipadd}\033[0m "
 						exit 1
 					fi
@@ -85,11 +85,12 @@ chk_host_ip(){
 }
 chk_host_ip
 
-if [ -f .consul_url ];then
-	consul_url=$(cat .consul_url)
-fi
 if [ -f .env ];then
 	Host_ip_num=$(cat .env | awk -F"=" '{print $2}')
+fi
+if [ -f .consul_url ];then
+	consul_url=$(cat .consul_url)
+	consul_url_dir="${consul_url}/v1/kv/concourse/${Host_ip_num}/"
 fi
 
 ##########################################################################################
@@ -108,7 +109,7 @@ show_menu(){
 		echo " >> Using Consul : $consul_url"
 	fi
 	if [ -f .env ];then
-		echo " >> Setting Host IP : $Host_ip_num"
+		echo " >> Setting Web(Master) IP : $Host_ip_num"
 	fi
 	echo -e "$BAR2"
  	echo -n "What do you want ? [0 - 3 or RM] : "
@@ -162,14 +163,14 @@ consul_url=$consul_url
 				echo " cat > ./keys/worker/tsa_host_key.pub"
 			else
 				pubkey_tsa=$(cat ./keys/web/tsa_host_key.pub)
-				consul_puttsa=$(curl -sL -X PUT -d "$pubkey_tsa" ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
+				consul_puttsa=$(curl -sL -X PUT -d "$pubkey_tsa" ${consul_url_dir}hosts_pubkey/tsa)
 				if [[ $consul_puttsa != "true" ]]; then
 					echo -e " \033[31m"$consul_url RESTful HTTP API Fail"\033[0m"
 					echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
 					echo " cat > ./keys/worker/tsa_host_key.pub"
-					consul_puttsa_null=$(curl -sL -X DELETE ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
+					consul_puttsa_null=$(curl -sL -X DELETE ${consul_url_dir}hosts_pubkey/tsa)
 				fi
-				consul_getwork=$(curl -sL ${consul_url}/v1/kv/concourse/hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}')
+				consul_getwork=$(curl -sL ${consul_url_dir}hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}')
 				if [[ $consul_getwork != "" ]];then
 					for i in $consul_getwork;do
 						echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
@@ -198,14 +199,14 @@ consul_url=$consul_url
 				echo -e "$BAR2"
 			else
 				pubkey_worker=$(cat ./keys/worker/worker_key.pub)
-				consul_putwork=$(curl -sL -X PUT -d "$pubkey_worker" ${consul_url}/v1/kv/concourse/hosts_pubkey/workers/${Host_ip_num})
+				consul_putwork=$(curl -sL -X PUT -d "$pubkey_worker" ${consul_url_dir}hosts_pubkey/workers/${Host_ip_num})
 				if [[ $consul_putwork != "true" ]]; then
 					echo -e " \033[31m"$consul_url RESTful HTTP API Fail"\033[0m"
 					echo "echo \"$(cat ./keys/worker/worker_key.pub)\" >> ./keys/web/authorized_worker_keys"
 					echo -e "$BAR2"
-					consul_putwork_null=$(curl -sL -X DELETE ${consul_url}/v1/kv/concourse/hosts_pubkey/workers/${Host_ip_num})
+					consul_putwork_null=$(curl -sL -X DELETE ${consul_url_dir}hosts_pubkey/workers/${Host_ip_num})
 				fi
-				consul_getweb=$(curl -X GET http://consul.mzdev.kr/v1/kv/concourse/hosts_pubkey/tsa?raw)
+				consul_getweb=$(curl -X GET ${consul_url_dir}hosts_pubkey/tsa?raw)
 				echo "$consul_getweb" > ./keys/worker/tsa_host_key.pub
 					if [[ $consul_getweb != "true" ]]; then
 						rm -rf ./keys/worker/tsa_host_key.pub

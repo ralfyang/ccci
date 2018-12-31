@@ -161,7 +161,6 @@ consul_url=$consul_url
 				echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
 				echo " cat > ./keys/worker/tsa_host_key.pub"
 			else
-				echo ""
 				pubkey_tsa=$(cat ./keys/web/tsa_host_key.pub)
 				consul_puttsa=$(curl -sL -X PUT -d "$pubkey_tsa" ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
 				if [[ $consul_puttsa != "true" ]]; then
@@ -170,6 +169,9 @@ consul_url=$consul_url
 					echo " cat > ./keys/worker/tsa_host_key.pub"
 					consul_puttsa_null=$(curl -sL -X DELETE ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
 				fi
+				for i in $(curl -sL ${consul_url}/v1/kv/concourse/hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}');do
+					echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
+				done
 			fi
 			;;
 		worker)

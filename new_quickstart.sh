@@ -140,6 +140,7 @@ read Menu
 keygen_for_worker(){
 Server_type=$1
 consul_url=$consul_url
+Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep "OK")
 #Host_ip_num=$Host_ip_num
  	set -e -u 
  	# generate the keys
@@ -194,13 +195,14 @@ consul_url=$consul_url
 			fi
 			;;
 		worker)
-			Master_checker=$(curl -si http://$Host_ip_num:$Host_port | head -1 | grep "OK")
+			#Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep "OK")
 			while true; do
 				if [[ $Master_checker != ""  ]];then
+					echo "master ok"
 					break
 				fi
+				echo -e "- Checking for the concourse web(\033[1;33mhttp://$Host_ip_num:$Host_port\033[0m) server alives. Please wait..."
 				sleep 5
-				echo "- Checking for the concourse web(http://$Host_ip_num:$Host_port) server alives. Please wait..."
 			done
 		 	mkdir -p keys/worker
  		 	ssh-keygen  -t rsa -f ./keys/worker/worker_key -N ''

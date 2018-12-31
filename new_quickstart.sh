@@ -112,7 +112,7 @@ show_menu(){
 		echo " >> Using Consul : $consul_url"
 	else
 		if [ -f .consul_not ];then
-			echo " >> Do not use Consul "
+			echo " >> Not using Consul... "
 		fi
 	fi
 	if [ -f .env ];then

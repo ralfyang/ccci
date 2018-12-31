@@ -28,6 +28,7 @@ services:
   concourse-console:
 #    build: ./
     image: goody80/ccci:latest
+    volumes: ["./pipelines:/pipelines"]
     environment:
       - CONCOURSE_TARGET_NAME=tutorial
       - CONCOURSE_DEFAULT_PIPELINE="CICD-Pipeline"

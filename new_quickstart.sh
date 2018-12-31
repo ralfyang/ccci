@@ -295,7 +295,7 @@ clear_setup(){
 		3) docker-compose down ;;
 		RM) docker-compose down
 		    clear_setup ;;
-		ED) ;;
+		ED) rm -rf .env .consul_* ;;
 		*) echo -e "\033[1;31m Select Menu\033[0m" ;;
 #		*) show_menu ;;
 	esac

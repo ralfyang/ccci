@@ -12,8 +12,9 @@ chk_consul_url(){
 		echo -e "$BAR2"
 		echo -n -e " Are you using \"Consul\" (\033[1;32m"yes"\033[0m/\033[1;33m"no"\033[0m)? : "
 		read consul_check
+		consul_check=$(echo "$consul_check" |sed -e 's/\(.*\)/\L\1/')
 		echo -e "$BAR2"
-			if [[ $consul_check =~ ^([yY][eE][sS]|[yY]) ]];then
+			if [[ $consul_check = "y" ]] || [[ $consul_check = "yes" ]]  ;then
 				echo " ex: http(s)://consul.example.com "
 				echo -n " Your \"Consul\" URL : "
 				read consul_url
@@ -254,7 +255,8 @@ clear_setup(){
 		2) checkout
 		   docker-compose up -d ;;
 		3) docker-compose down ;;
-		RM) docker-compose down && clear_setup ;;
+		RM) docker-compose down
+		    clear_setup ;;
 		*) show_menu ;;
 	esac
 		

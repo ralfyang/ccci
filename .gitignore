@@ -1,3 +1,5 @@
 DB/*
 keys/*
 .env
+pipelines/credentials.yml
+pipelines/pipeline.yml

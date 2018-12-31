@@ -30,6 +30,7 @@ services:
     image: goody80/ccci:latest
     environment:
       - CONCOURSE_TARGET_NAME=tutorial
+      - CONCOURSE_DEFAULT_PIPELINE="CICD-Pipeline"
       - CONCOURSE_USER=test
       - CONCOURSE_PASSWORD=test
       - CONCOURSE_SERVER="http://${HOST_IP}:8080"

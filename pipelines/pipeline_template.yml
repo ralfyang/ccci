@@ -1,0 +1,152 @@
+resources:
+
+  - name: repo-develop
+    type: git
+    source:
+      ## GIT URL required HERE as below
+      uri: #GIT URL required HERE as below
+      ## uri: git@github.com:sheldon1986/concourse-ci-demo-minseok.git
+      branch: develop
+      private_key: {{github-private-key}}
+    check_every: 10s # for demo
+  - name: repo-master
+    type: git
+    source:
+      ## GIT URL required HERE as below
+      uri: #GIT URL required HERE as below
+      ## uri: git@github.com:sheldon1986/concourse-ci-demo-minseok.git
+      branch: master
+      private_key: {{github-private-key}}
+    check_every: 10s # for demo
+  - name: cf-prod
+    type: cf
+    source:
+      api: {{cf-api}}
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: {{cf-space-prod}}
+      skip_cert_check: true
+  - name: cf-staging
+    type: cf
+    source:
+      api: {{cf-api}}
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: {{cf-space-staging}}
+      skip_cert_check: true
+  - name: cf-dev
+    type: cf
+    source:
+      api: {{cf-api}}
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: {{cf-space-dev}}
+      skip_cert_check: true
+  - name: m2
+    type: docker-image
+    source:
+      repository: making/m2
+
+jobs:
+  - name: test-develop
+    serial: true
+    public: true
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-develop
+          trigger: true
+        - get: m2
+      - task: unit
+        file: repo/ci/tasks/unit.yml
+
+  - name: deploy-develop
+    serial: true
+    public: false
+    plan:
+      - aggregate:
+        - get: m2
+        - get:  repo
+          resource: repo-develop
+          passed: [ test-develop ]
+          trigger: true
+      - task: build
+        file: repo/ci/tasks/build.yml
+      - put: cf-dev
+        params:
+          manifest: repo/manifest-dev.yml
+          path: output/demo.jar
+          current_app_name: concourse-ci-demo-dev
+
+  - name: pass-dev
+    #    serial: true
+    #    public: true
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-develop
+        - get: cf-dev
+          passed: [ deploy-develop ]
+          trigger: false
+          #        - get: m2
+          #      - task: unit
+          #        file: repo/ci/tasks/unit.yml
+    
+    
+  - name: deploy-staging
+    serial: true
+    public: false
+    plan:
+      - aggregate:
+        - get: m2
+        - get: repo
+          resource: repo-develop
+          passed: [ pass-dev ]
+          trigger: true
+      - task: build
+        file: repo/ci/tasks/build.yml
+      - put: cf-staging
+        params:
+          manifest: repo/manifest-staging.yml
+          path: output/demo.jar
+          current_app_name: concourse-ci-demo-staging
+
+  - name: merge-deployment-to-master
+    public: true
+    plan:
+      - aggregate:
+        - get: repo
+          resource: repo-develop
+        - get: cf-staging
+          passed: [ deploy-staging ]
+          trigger: true
+      - task: merge-deployment-to-master
+        file: repo-release/ci/tasks/merge-release-branch.yml
+        params:
+          GIT_EMAIL: {{git-email}}
+          GIT_NAME: {{git-name}}
+      - put: repo
+        resource: repo-master
+        params:
+          repository: out
+
+  - name: deploy-prod
+    serial: true
+    public: false
+    plan:
+      - aggregate:
+        - get: m2
+        - get:  repo
+          resource: repo-master
+          passed: [ merge-deployment-to-master ]
+          trigger: true
+      - task: build
+        file: repo/ci/tasks/build.yml
+      - put: cf-prod
+        params:
+          manifest: repo/manifest.yml
+          path: output/demo.jar
+          current_app_name: concourse-ci-demo-prod

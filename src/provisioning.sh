@@ -33,7 +33,12 @@ fly targets
 ## Setup Default sample pipeline
 fly -t $Target_name set-pipeline -c $Pipeline_basic -p $Pipeline_name -n
 
+## Create a new pipeline
+cd /pipelines
+fly -t $CONCOURSE_TARGET_NAME set-pipeline -p $CONCOURSE_DEFAULT_PIPELINE -c pipeline.yml -l credentials.yml  --non-interactive
 
+## Unpause 1st
+fly -t $CONCOURSE_TARGET_NAME unpause-pipeline -p $CONCOURSE_DEFAULT_PIPELINE
 
 #fly -t $Target_name set-pipeline -p bluegreen -c ./ci/pipeline-bluegreen.yml -l ../ci-credentials-online.yml  --non-interactive
 #fly -t $Target_name set-pipeline -p canary -c ./ci/pipeline-canary.yml -l ../ci-credentials-online.yml  --non-interactive

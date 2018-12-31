@@ -157,6 +157,16 @@ consul_url=$consul_url
 				echo "$BAR"
 				echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
 				echo " cat > ./keys/worker/tsa_host_key.pub"
+			else
+				echo ""
+				pubkey_tsa=$(cat ./keys/web/tsa_host_key.pub)
+				consul_puttsa=$(curl -sL -X PUT -d "$pubkey_tsa" ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
+				if [[ $consul_puttsa != "true" ]]; then
+					echo -e " \033[31m"$consul_url RESTful HTTP API Fail"\033[0m"
+					echo " to ./keys/worker/tsa_host_key.pub of worker's host. follow the command"
+					echo " cat > ./keys/worker/tsa_host_key.pub"
+					consul_puttsa_null=$(curl -sL -X DELETE ${consul_url}/v1/kv/concourse/hosts_pubkey/tsa)
+				fi
 			fi
 			;;
 		worker)

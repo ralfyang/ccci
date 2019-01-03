@@ -51,7 +51,7 @@ Host_ip=$1
 	## Create a new docker-compose.yml for the Stack install
 	if [ ! -f .env ];then
 		echo "HOST_IP=$Host_ip" > .env
-		echo " docker-compose config file has been created as below!"
+		#echo " docker-compose config file has been created as below!"
 		cat .env
 	fi
 }
@@ -87,6 +87,7 @@ chk_host_ip(){
 	fi
 }
 chk_host_ip
+
 
 if [ -f .env ];then
 	Host_ip_num=$(cat .env | awk -F"=" '{print $2}')
@@ -135,19 +136,17 @@ read Menu
 # echo true chk.
 # curl consul.mzdev.kr/v1/kv/kkkkkkkkkkkkkk?raw
 # curl -sL http://consul.mzdev.kr/v1/kv/concourse/hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk '{print "http://consul.mzdev.kr/v1/kv/"$0"?raw"}'
-
+#Master_checker=$(curl -si http://$Host_ip_num:$Host_port | head -1 | grep "OK" | awk '{print $NF}')
 
 keygen_for_worker(){
 Server_type=$1
 consul_url=$consul_url
-Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep "OK")
-#Host_ip_num=$Host_ip_num
  	set -e -u 
  	# generate the keys
  	# --------
 
  	## for total set
-	case $Server_type in
+	case $Server_type in 
 		total)
 		 	mkdir -p keys/web keys/worker
 		 	ssh-keygen  -t rsa -f ./keys/web/tsa_host_key -N ''
@@ -195,8 +194,9 @@ Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep 
 			fi
 			;;
 		worker)
-			#Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep "OK")
 			while true; do
+			Master_checker=$(curl -si http://$Host_ip_num:$Host_port | head -1 | grep "OK" | awk '{print $NF}')
+			#Master_checker=$(curl -si http://$Host_ip_num:$Host_port | head -1 | grep "OK")
 				if [[ $Master_checker != ""  ]];then
 					echo "master ok"
 					break
@@ -223,15 +223,17 @@ Master_checker=$(curl -si http://${Host_ip_num}:${Host_port} \| head -1 \| grep 
 					echo -e "$BAR2"
 					consul_putwork_null=$(curl -sL -X DELETE ${consul_url_dir}hosts_pubkey/workers/${Host_ip_num})
 				fi
-				consul_getweb=$(curl -X GET ${consul_url_dir}hosts_pubkey/tsa?raw)
+				consul_getweb=$(curl -sL -X GET ${consul_url_dir}hosts_pubkey/tsa?raw)
 				echo "$consul_getweb" > ./keys/worker/tsa_host_key.pub
 					if [[ $consul_getweb == "" ]]; then
 						rm -rf ./keys/worker/tsa_host_key.pub
-						echo "tsa key error" # >> log.log
+						echo " >> tsa key error" # >> log.log
+						echo -e "\033[1;31m >> Concourse Web(Master)\033[0m first run." # >> log.log
 					fi
 			fi
 			#######consul
 			;;
+
 	esac
 }
 

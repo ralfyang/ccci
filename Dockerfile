@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 ## Meta information
-LABEL version=0.1
+LABEL version=0.2
 LABEL name=ccci
 LABEL description="For the Concourse Console by fly command"
 
@@ -13,7 +13,6 @@ RUN chmod 755 /usr/bin/fly
 ## Install th CURL command for download
 RUN apt-get update 
 RUN apt-get install curl -y
-
 
 RUN curl -sL "https://github.com/starkandwayne/concourse-tutorial/archive/v3.10.0.tar.gz" > concourse.tgz && tar zxvf concourse.tgz
 COPY ./src/provisioning.sh provisioning.sh

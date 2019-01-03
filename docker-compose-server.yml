@@ -23,7 +23,9 @@ services:
       - CONCOURSE_MAIN_TEAM_ALLOW_ALL_USERS=true
       - CONCOURSE_LOG_LEVEL=fatal
     command: web
-    ports: ["8080:8080"]
+    ports:
+      - "8080:8080"
+      - "2222:2222"
     restart: always
   concourse-console:
 #    build: ./

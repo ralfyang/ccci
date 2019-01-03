@@ -1,5 +1,5 @@
 #!/bin/bash
 
-Tarball="0.6.tar.gz"
+Tarball="0.7.tar.gz"
 curl -sL https://github.com/goody80/ccci/archive/$Tarball -o ./ccci.tgz && tar zxvf ccci.tgz && echo "Download & extraction has been done!" && mv ccci-* ccci && rm -f ccci.tgz
 echo " ! You just type like this command -> ./quickstart.sh in the 'ccci' directory"

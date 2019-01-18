@@ -160,6 +160,21 @@ clear_setup(){
 	echo "Configuration set has been removed!!"
 
 }
+worker_key_consul(){
+consul_url=$consul_url
+	if [[ $consul_url != "" ]]; then
+		rm -rf ./keys/web/authorized_worker_keys
+		consul_getwork=$(curl -sL ${consul_url_dir}hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}')
+		if [[ $consul_getwork != "" ]];then
+			for i in $consul_getwork;do
+				echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
+			done
+			echo "worker pubkey get"
+		fi
+		echo " Web : http://$Host_ip_num:$Host_port"
+		echo -e "$BAR2"
+	fi
+}
 ##########################################################################################
 show_menu(){
  #	clear
@@ -180,6 +195,7 @@ show_menu(){
 		echo " 1 ] Up the Concourse stack"
 		echo " 2 ] Run the Concourse stack by Daemon"
 		echo " 3 ] Down the Concourse stack"
+		echo " W ] worker pubkey refresh"
 		echo -e "\033[3;31mRM ] Clear the setup\033[0m"
 		echo -e "$BAR2"
 		echo -n "Please select run type as above: [1-3 or RM] "
@@ -187,10 +203,9 @@ show_menu(){
 		case $CC_run in 
 			0) provisioning_docker ;;
 			1) docker-compose up ;;
-			   #docker-compose up ;;
 			2) docker-compose up -d;;
-			   #docker-compose up -d ;;
 			3) docker-compose down ;;
+			W|w) worker_key_consul ;;
 			RM | rm) clear_setup ;;
 			*) echo  -e "\033[1;31m >> Select Menu\033[0m" ;;
 		esac
@@ -259,15 +274,7 @@ chk_set
 				else
 					echo " tsa pubkey put" 
 				fi
-				consul_getwork=$(curl -sL ${consul_url_dir}hosts_pubkey/workers?keys | sed -e "s/,/\n/g" -e 's/\[//g' -e 's/\]//g' -e 's/"//g' | awk -v zzz=$consul_url/v1/kv/ '{print zzz $0"?raw"}')
-				if [[ $consul_getwork != "" ]];then
-					for i in $consul_getwork;do
-						echo "$(curl -sL $i)" >> ./keys/web/authorized_worker_keys
-					done
-					echo "worker pubkey get"
-				fi
-				echo " Web : http://$Host_ip_num:$Host_port"
-				echo -e "$BAR2"
+				worker_key_consul
 			fi
 			;;
 		worker)

@@ -211,8 +211,7 @@ show_menu(){
 			W|w) 
 			if [[ $(cat svrty.log) == "master" ]]; then
 				worker_key_consul 
-				docker-compose down
-				docker-compose up -d
+				docker restart $(docker ps | grep concourse-web | awk '{print $1}')
 			else
 				echo  -e "\033[1;31m >> Select Menu\033[0m"
 			fi

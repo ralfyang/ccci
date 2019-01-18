@@ -5,8 +5,8 @@
 BAR="=========================================================="
 BAR2="\033[32m==========================================================\033[0m"
 
+# default Host Port #
 Host_port=8080
-
 
 # Consul check #
 chk_consul_url(){
@@ -85,6 +85,7 @@ chk_host_ip(){
 }
 #chk_host_ip
 
+# worker IP check #
 chk_worker_ip(){
 	if [ ! -f .env ];then
 		echo "$BAR"
@@ -176,10 +177,11 @@ consul_url=$consul_url
 	fi
 }
 ##########################################################################################
+# menu start #
 show_menu(){
- #	clear
 	echo -e "$BAR2"
 	if [ ! -f .docker-compose.yml ]&[ ! -d ./keys ];then
+		clear
 		echo " 1 ] Concourse web + console"
 		echo " 2 ] Concourse worker"
 		echo " 3 ] Concourse web + worker + console"
@@ -379,6 +381,5 @@ checkout(){
 		1 | 2 | 3) checkout 
 			show_menu ;;
 		RS | rs ) clear_setup ;;
-#		*) show_menu ;;
 	esac
 		

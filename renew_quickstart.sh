@@ -210,10 +210,11 @@ show_menu(){
 			if [[ $(cat svrty.log) == "master" ]]; then
 				worker_key_consul 
 				docker-compose down
-				docker-compose up -d ;;
+				docker-compose up -d
 			else
-				echo  -e "\033[1;31m >> Select Menu\033[0m" ;;
+				echo  -e "\033[1;31m >> Select Menu\033[0m"
 			fi
+			;;
 			RM | rm) clear_setup ;;
 			*) echo  -e "\033[1;31m >> Select Menu\033[0m" ;;
 		esac

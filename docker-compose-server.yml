@@ -28,14 +28,21 @@ services:
       - "2222:2222"
     restart: always
   concourse-console:
-#    build: ./
-    image: goody80/ccci:latest
+    build: ./
+#    image: goody80/ccci:latest #Origianal Registry
+    image: lukecha/ccci:latest
     volumes: ["./pipelines:/pipelines"]
     environment:
       - CONCOURSE_TARGET_NAME=tutorial
-      - CONCOURSE_DEFAULT_PIPELINE="CICD-Pipeline"
+      - CONCOURSE_DEFAULT_PIPELINE=CICD-Pipeline
       - CONCOURSE_USER=test
       - CONCOURSE_PASSWORD=test
-      - CONCOURSE_SERVER="http://${HOST_IP}:8080"
+#      - CONCOURSE_SERVER=http://${HOST_IP}:8080
+      - AIRPLAINE_PORT=8088
+      - AIRPLAINE_USER=test
+      - AIRPLAINE_PASSWORD=test
+      - CONCOURSE_WEB_SERVER=http://concourse-web:8080
+    ports:
+      - "8088:8088"
     links:
-      - concourse-web
+      - concourse-web:concourse-web
